@@ -1,0 +1,73 @@
+name: Fetch Homework Assignments
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Every day at 6 AM UTC (adjust to your timezone)
+  workflow_dispatch:        # Also allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Yi ──────────────────────────────────────────────────────────────
+      - name: Fetch Yi's assignments
+        continue-on-error: true
+        env:
+          CREDENTIALS_JSON: ${{ secrets.YI_GOOGLE_CREDENTIALS }}
+          TOKEN_JSON: ${{ secrets.YI_GOOGLE_TOKEN }}
+        run: |
+          echo "$CREDENTIALS_JSON" > students/yi/credentials.json
+          echo "$TOKEN_JSON"       > students/yi/token.json
+          cd students/yi && python ../../fetch_assignments.py
+          rm -f students/yi/credentials.json students/yi/token.json
+        working-directory: ${{ github.workspace }}
+
+      # ── Tai ─────────────────────────────────────────────────────────────
+      - name: Fetch Tai's assignments
+        continue-on-error: true
+        env:
+          CREDENTIALS_JSON: ${{ secrets.TAI_GOOGLE_CREDENTIALS }}
+          TOKEN_JSON: ${{ secrets.TAI_GOOGLE_TOKEN }}
+        run: |
+          echo "$CREDENTIALS_JSON" > students/tai/credentials.json
+          echo "$TOKEN_JSON"       > students/tai/token.json
+          cd students/tai && python ../../fetch_assignments.py
+          rm -f students/tai/credentials.json students/tai/token.json
+        working-directory: ${{ github.workspace }}
+
+      # ── Ryan ─────────────────────────────────────────────────────────────
+      - name: Fetch Ryan's assignments
+        continue-on-error: true
+        env:
+          CREDENTIALS_JSON: ${{ secrets.RYAN_GOOGLE_CREDENTIALS }}
+          TOKEN_JSON: ${{ secrets.RYAN_GOOGLE_TOKEN }}
+        run: |
+          echo "$CREDENTIALS_JSON" > students/ryan/credentials.json
+          echo "$TOKEN_JSON"       > students/ryan/token.json
+          cd students/ryan && python ../../fetch_assignments.py
+          rm -f students/ryan/credentials.json students/ryan/token.json
+        working-directory: ${{ github.workspace }}
+
+      # ── Commit all updated pages ─────────────────────────────────────────
+      - name: Commit updated assignment pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add students/yi/assignments.html students/tai/assignments.html students/ryan/assignments.html
+          git diff --staged --quiet || git commit -m "Auto-update: assignments $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

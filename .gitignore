@@ -1,0 +1,13 @@
+# Google OAuth credentials — never commit these
+students/*/credentials.json
+students/*/token.json
+
+# Legacy folder credentials
+Yi_HW_Dashboard/credentials.json
+Yi_HW_Dashboard/token.json
+
+# Python cache
+__pycache__/
+*/__pycache__/
+*.pyc
+*.pyo
