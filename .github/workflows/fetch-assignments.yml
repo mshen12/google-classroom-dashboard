@@ -30,21 +30,22 @@ jobs:
           CREDENTIALS_JSON: ${{ secrets.YI_GOOGLE_CREDENTIALS }}
           TOKEN_JSON: ${{ secrets.YI_GOOGLE_TOKEN }}
         run: |
+          trap 'rm -f students/yi/credentials.json students/yi/token.json' EXIT
           echo "$CREDENTIALS_JSON" > students/yi/credentials.json
           echo "$TOKEN_JSON"       > students/yi/token.json
           (cd students/yi && python ../../fetch_assignments.py)
-          rm -f students/yi/credentials.json students/yi/token.json
 
       # ── Ryan ────────────────────────────────────────────────────────────
       - name: Fetch Ryan's assignments
+        continue-on-error: true
         env:
           CREDENTIALS_JSON: ${{ secrets.RYAN_GOOGLE_CREDENTIALS }}
           TOKEN_JSON: ${{ secrets.RYAN_GOOGLE_TOKEN }}
         run: |
+          trap 'rm -f students/ryan/credentials.json students/ryan/token.json' EXIT
           echo "$CREDENTIALS_JSON" > students/ryan/credentials.json
           echo "$TOKEN_JSON"       > students/ryan/token.json
           (cd students/ryan && python ../../fetch_assignments.py)
-          rm -f students/ryan/credentials.json students/ryan/token.json
 
       # ── Commit all updated pages ─────────────────────────────────────────
       - name: Commit updated assignment pages
