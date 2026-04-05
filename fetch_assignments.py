@@ -10,6 +10,7 @@ Run from a student's directory, e.g.:
 
 import os
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+import hashlib
 import json
 import webbrowser
 import datetime
@@ -235,7 +236,7 @@ def escape_html(text):
     )
 
 
-def generate_html(courses):
+def generate_html(courses, pin_hash=""):
     """Generate a self-contained HTML page from the courses data."""
     now = datetime.datetime.now()
     now_str = f"{now.strftime('%B')} {now.day}, {now.year} at {now.strftime('%I:%M %p').lstrip('0')}"
@@ -579,6 +580,87 @@ def generate_html(courses):
 
 <footer>Click any assignment to open it in Google Classroom</footer>
 
+{"" if not pin_hash else f"""
+<div id="pinOverlay" style="
+  position:fixed; inset:0; z-index:9999;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+  display:flex; align-items:center; justify-content:center;">
+  <div style="
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:24px; padding:40px 36px;
+    text-align:center; width:300px;">
+    <div style="font-size:2rem; margin-bottom:8px;">🔒</div>
+    <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:6px;">Enter PIN</div>
+    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:28px;">This page is protected</div>
+    <div id="pinDots" style="display:flex; justify-content:center; gap:14px; margin-bottom:28px;">
+      <span class="dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-block;transition:background 0.15s"></span>
+      <span class="dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-block;transition:background 0.15s"></span>
+      <span class="dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-block;transition:background 0.15s"></span>
+      <span class="dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-block;transition:background 0.15s"></span>
+    </div>
+    <div id="pinError" style="color:#f87171;font-size:0.82rem;height:18px;margin-bottom:12px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      {"".join(f'<button onclick="pinDigit(\\'{d}\\')" style="padding:16px;border-radius:12px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:1.1rem;font-weight:600;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background=\\'rgba(255,255,255,0.2)\\'" onmouseout="this.style.background=\\'rgba(255,255,255,0.1)\\'">{d}</button>' for d in ['1','2','3','4','5','6','7','8','9'])}
+      <div></div>
+      <button onclick="pinDigit('0')" style="padding:16px;border-radius:12px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:1.1rem;font-weight:600;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">0</button>
+      <button onclick="pinBackspace()" style="padding:16px;border-radius:12px;border:none;background:rgba(255,255,255,0.1);color:white;font-size:1.1rem;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">⌫</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PIN_HASH = "{pin_hash}";
+  const SESSION_KEY = "pin_ok_" + PIN_HASH.slice(0, 8);
+  let pinEntry = "";
+
+  if (sessionStorage.getItem(SESSION_KEY) === "1") {{
+    document.getElementById("pinOverlay").style.display = "none";
+  }}
+
+  async function sha256(msg) {{
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }}
+
+  function updateDots() {{
+    document.querySelectorAll("#pinDots .dot").forEach((dot, i) => {{
+      dot.style.background = i < pinEntry.length ? "white" : "rgba(255,255,255,0.2)";
+    }});
+  }}
+
+  function pinDigit(d) {{
+    if (pinEntry.length >= 4) return;
+    pinEntry += d;
+    updateDots();
+    document.getElementById("pinError").textContent = "";
+    if (pinEntry.length === 4) checkPin();
+  }}
+
+  function pinBackspace() {{
+    pinEntry = pinEntry.slice(0, -1);
+    updateDots();
+  }}
+
+  async function checkPin() {{
+    const hash = await sha256(pinEntry);
+    if (hash === PIN_HASH) {{
+      sessionStorage.setItem(SESSION_KEY, "1");
+      document.getElementById("pinOverlay").style.display = "none";
+    }} else {{
+      document.getElementById("pinError").textContent = "Incorrect PIN, try again";
+      pinEntry = "";
+      updateDots();
+    }}
+  }}
+
+  document.addEventListener("keydown", e => {{
+    if (e.key >= "0" && e.key <= "9") pinDigit(e.key);
+    if (e.key === "Backspace") pinBackspace();
+  }});
+</script>
+"""}
+
 <script>
   const filterBtns = document.querySelectorAll('.filter-btn');
   filterBtns.forEach(btn => {{
@@ -619,7 +701,9 @@ def main():
         return
 
     print(f"\nGenerating HTML page...")
-    html = generate_html(courses)
+    raw_pin = os.environ.get("STUDENT_PIN", "").strip()
+    pin_hash = hashlib.sha256(raw_pin.encode()).hexdigest() if raw_pin else ""
+    html = generate_html(courses, pin_hash=pin_hash)
 
     output_path = Path(OUTPUT_FILE).resolve()
     with open(output_path, "w", encoding="utf-8") as f:

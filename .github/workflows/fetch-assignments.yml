@@ -41,6 +41,7 @@ jobs:
         env:
           CREDENTIALS_JSON: ${{ secrets.RYAN_GOOGLE_CREDENTIALS }}
           TOKEN_JSON: ${{ secrets.RYAN_GOOGLE_TOKEN }}
+          STUDENT_PIN: ${{ secrets.RYAN_PIN }}
         run: |
           trap 'rm -f students/ryan/credentials.json students/ryan/token.json' EXIT
           echo "$CREDENTIALS_JSON" > students/ryan/credentials.json
