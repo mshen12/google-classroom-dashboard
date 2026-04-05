@@ -35,11 +35,22 @@ jobs:
           (cd students/yi && python ../../fetch_assignments.py)
           rm -f students/yi/credentials.json students/yi/token.json
 
+      # ── Ryan ────────────────────────────────────────────────────────────
+      - name: Fetch Ryan's assignments
+        env:
+          CREDENTIALS_JSON: ${{ secrets.RYAN_GOOGLE_CREDENTIALS }}
+          TOKEN_JSON: ${{ secrets.RYAN_GOOGLE_TOKEN }}
+        run: |
+          echo "$CREDENTIALS_JSON" > students/ryan/credentials.json
+          echo "$TOKEN_JSON"       > students/ryan/token.json
+          (cd students/ryan && python ../../fetch_assignments.py)
+          rm -f students/ryan/credentials.json students/ryan/token.json
+
       # ── Commit all updated pages ─────────────────────────────────────────
       - name: Commit updated assignment pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add students/yi/assignments.html
+          git add students/yi/assignments.html students/ryan/assignments.html
           git diff --staged --quiet || git commit -m "Auto-update: assignments $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
