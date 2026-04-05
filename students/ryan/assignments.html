@@ -3,20 +3,1236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ryan — Homework Dashboard</title>
+  <title>Homework Dashboard</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-    .box { background: white; border-radius: 16px; padding: 48px 56px; text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
-    h2 { color: #1a1a2e; margin-bottom: 12px; }
-    p { color: #6b7280; margin-bottom: 24px; }
-    a { color: #4f46e5; text-decoration: none; font-weight: 600; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 28px 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .home-btn:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
+    .meta {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      padding: 14px 32px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      filter: brightness(0.95);
+    }
+
+    .filter-btn.active {
+      border-color: currentColor;
+    }
+
+    .filter-btn .dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .filter-btn[data-filter="all"].active      { background: #1a1a2e; color: white; }
+    .filter-btn[data-filter="overdue"].active  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .filter-btn[data-filter="due-soon"].active { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .filter-btn[data-filter="upcoming"].active { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .filter-btn[data-filter="turned-in"].active{ background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+
+    .card.hidden { display: none; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 20px;
+      padding: 24px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      color: white;
+    }
+
+    .course-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .section {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .assignment-count {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      opacity: 0.8;
+      background: rgba(255,255,255,0.2);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .card-body {
+      padding: 8px 0;
+    }
+
+    .assignment {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f3f4f6;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s;
+    }
+
+    .assignment:last-child {
+      border-bottom: none;
+    }
+
+    .assignment:hover {
+      background: #f9fafb;
+    }
+
+    .assignment-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .desc {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .assignment-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .points {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .due-chip {
+      font-size: 0.73rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .due-overdue { background: #fee2e2; color: #991b1b; }
+    .due-soon    { background: #fef3c7; color: #92400e; }
+    .due-ok      { background: #dcfce7; color: #166534; }
+    .due-none    { background: #f3f4f6; color: #6b7280; }
+
+    .status-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .state-turned-in  { background: #dbeafe; color: #1d4ed8; }
+    .state-graded     { background: #d1fae5; color: #065f46; }
+    .state-returned   { background: #e0e7ff; color: #3730a3; }
+    .state-late       { background: #fee2e2; color: #991b1b; }
+    .state-assigned   { background: #f3f4f6; color: #374151; }
+    .state-unknown    { background: #f3f4f6; color: #9ca3af; }
+
+    .no-assignments {
+      padding: 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.875rem;
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; padding: 16px; }
+      header { padding: 20px 16px; }
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>🚀 Ryan's Homework</h2>
-    <p>No data yet. The GitHub Action will populate this page on its first run.</p>
-    <a href="../../">← Back to Home</a>
-  </div>
+
+<header>
+  <a class="home-btn" href="../../">&#8592; Home</a>
+  <h1>Homework Dashboard</h1>
+  <div class="meta">Last updated: April 5, 2026 at 9:26 PM &nbsp;&bull;&nbsp; 12 subjects &nbsp;&bull;&nbsp; 126 total assignments</div>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="overdue"><span class="dot" style="background:#991b1b"></span> Overdue (Last 3 Months)</button>
+  <button class="filter-btn" data-filter="due-soon"><span class="dot" style="background:#d97706"></span> Due Soon</button>
+  <button class="filter-btn" data-filter="upcoming"><span class="dot" style="background:#16a34a"></span> Upcoming</button>
+  <button class="filter-btn" data-filter="turned-in"><span class="dot" style="background:#1d4ed8"></span> Turned In</button>
+</div>
+
+<div class="grid">
+  
+        <div class="card">
+          <div class="card-header" style="background:#4f46e5">
+            <div class="course-name">2025-26 SPRING PHYSICS</div>
+            <span class="section">1</span>
+            <div class="assignment-count">12 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ3ODEyNjM3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 5 note-taking</div>
+                    <div class="desc">Use Cornell 2-column notes to write down important details and main ideas from the chapter</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ3ODQyNTEx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 4 note-taking</div>
+                    <div class="desc">Use Cornell 2-column notes to write down important details and main ideas from the chapter</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzIyMTYxNjkw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 3 note-taking</div>
+                    <div class="desc">Use Cornell 2-column notes to write down important details and main ideas from the chapter</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ5NTM2NTIz/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 2 note-taking</div>
+                    <div class="desc">Use Cornell 2-column notes to write down important details and main ideas from the chapter</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ3NDc5NjA4/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 5 practice</div>
+                    <div class="desc">Attach to this assignment pictures of your completed worksheets for pages 25-28</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ3MjAyNTU1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 4 practice </div>
+                    <div class="desc">Attach to this assignment pictures of your completed worksheets for pages 13-24
+</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ3ODA2MDg0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 3 practice</div>
+                    <div class="desc">Attach to this assignment pictures of your completed worksheets for pages 7-12 AND 29-30</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzQ2NDI3Mjgw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 2 practice</div>
+                    <div class="desc">Attach to this assignment pictures of your completed worksheets for pages 3-5</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzUwOTg5OTE0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 5 End of Chapter Questions</div>
+                    <div class="desc">Attach photos of your completed end of chapter questions -- from the following sections of different types of questions ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Mar 20, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzUyNjI0NDE2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 4  End of Chapter Questions</div>
+                    <div class="desc">Attach photos of your completed end of chapter questions -- from the following sections of different types of questions ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Mar 20, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzUwMzE3MjU1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 3 End of Chapter Questions</div>
+                    <div class="desc">Attach photos of your completed end of chapter questions -- from the following sections of different types of questions ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Mar 20, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODQ0MzQxODEwNDc2/a/ODQ0MzUxMjA2NzE2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">ch 2 End of Chapter Questions </div>
+                    <div class="desc">Attach photos of your completed end of chapter questions -- from the following sections of different types of questions ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">25 pts</span>
+                    <span class="due-chip due-overdue">Mar 20, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#0891b2">
+            <div class="course-name">SCIENCE FAIR 2026 -- SPRING</div>
+            <span class="section">1</span>
+            <div class="assignment-count">12 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA0MDgzMzYy/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">1-23 Top 3 choices for science fair experiment</div>
+                    <div class="desc">attach a document in which you list 3 possible ideas for your science fair experiment -- for each idea, you should be ab...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Jan 24, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (100)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA0NDI0NDYx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">1-30 Approval by teacher -- and selection by student -- of one science fair experiment</div>
+                    <div class="desc">attach a document describing the one experiment that has been approved by the teacher and that you will complete for thi...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Jan 31, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (100)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA1MzMwOTU2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">2-13 Experimental Design</div>
+                    <div class="desc">attach a document that describes your detailed experimental design -- consisting of the following :
+
+
+1) what one thing ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Feb 14, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (95)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI1NzI1NzAwODg3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">2-20 LIST OF MATERIALS -- AND TEXT OF EMAIL REQUESTING MATERIALS</div>
+                    <div class="desc">write a list of materials needed for your science fair experiment -- 
+
+add text to this list to form the body of an emai...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Feb 21, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA1ODYyMDM1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">2-27 Photo of gathered materials </div>
+                    <div class="desc">1) attach a photo showing that you have gathered all of the materials that you need to perform your experiment
+
+2) attac...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Feb 28, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (90)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA1NDMzODAy/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">3-6 Data Table from completed experiment</div>
+                    <div class="desc">attach a document showing your data table showing that you have completed your experiment
+
+next week (3/13) you will sub...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Mar 7, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (90)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA2NDQyNDQ2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">3-13 Graph of Data from experiment</div>
+                    <div class="desc">attach a document showing your graph of your data 
+
+after break (4/3) you will submit a claim statement for the pattern ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Mar 14, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (90)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA2NTgzNzU4/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">4-3 Claim Statement for the  Pattern in your Data</div>
+                    <div class="desc">attach a document giving your claim statement for the pattern that you notice on your graph
+
+there are three possibiliti...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Apr 4, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0NzA3OTE0ODY1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">4-10 Claim statement for explanation AND predictions from pattern and from explanation</div>
+                    <div class="desc">1) attach a document giving your claim statement for your PERSONAL explanation (reason why) for the pattern that you not...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-ok">Saturday at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Not Started</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0ODU4MzcwNTEx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">4-17 Scientists' ideas -- Laws  -- Accepted Theories</div>
+                    <div class="desc">attach a document in which you state the patterns that scientists would expect to notice in your experiment (scientific ...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-ok">Apr 18, 2026 at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0ODU4ODMxNDI5/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">4-24  DRAFT of Presentation and Poster Board</div>
+                    <div class="desc">attach a photo of your poster board along with any slides, videos, or other photos of your presentation
+
+next week (5/1)...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-ok">Apr 25, 2026 at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODI0NzAzNzc4Mzk1/a/ODI0ODU5MzA4MzMx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">5-1 FINAL Presentation / Poster Board</div>
+                    <div class="desc">attach a photo of your REVISED , COMPLETED poster board along with any slides, videos, or other photos of your presentat...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-ok">May 2, 2026 at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#059669">
+            <div class="course-name">Art 2025-2026</div>
+            
+            <div class="assignment-count">5 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODIxMTU0MTkxMjYy/a/ODI1MjM0NjY2Mzcw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Tell a parent to download Pixicade by next art class!</div>
+                    <div class="desc">Hi students, we are starting an animation unit at the same time as the Jewelry unit. It will allow me time in class to w...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-overdue">Feb 12, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODIxMTU0MTkxMjYy/a/ODI1MjM1MjcxNTg0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Spring Portfolio</div>
+                    <div class="desc">Hello, 
+
+Your room teacher have or will be asking you to choose an art project for your portfolio presentation. 
+
+You ma...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-ok">May 21, 2026 at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODIxMTU0MTkxMjYy/a/ODI0Nzk5MjkxODkz/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Marker Unit Quiz</div>
+                    <div class="desc">You completed or nearly completed the marker unit.
+You took notes on different types of markers.
+You used different type...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODIxMTU0MTkxMjYy/a/ODIxMTU0MTkxMjc3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Fall portfolio</div>
+                    <div class="desc">Hello, 
+
+Your room teacher have or will be asking you to choose an art project for your portfolio presentation. 
+
+You ma...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODIxMTU0MTkxMjYy/a/ODM4Mjk4OTIxNjcw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Pastel Unit</div>
+                    <div class="desc">You are being graded on your pastel unit. 
+1. How well did you learn to blend pastels?
+2. How well can you match the col...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#d97706">
+            <div class="course-name">2025-2026 National ELEMENTARY Honor Society</div>
+            
+            <div class="assignment-count">0 assignments</div>
+          </div>
+          <div class="card-body">
+            <div class="no-assignments">No assignments posted</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#dc2626">
+            <div class="course-name">YOUNG ENTREPRENEURS' DAY</div>
+            
+            <div class="assignment-count">7 assignments</div>
+          </div>
+          <div class="card-body">
+            
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#7c3aed">
+            <div class="course-name">2025-26 Latin Certamen -JV</div>
+            
+            <div class="assignment-count">0 assignments</div>
+          </div>
+          <div class="card-body">
+            <div class="no-assignments">No assignments posted</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#db2777">
+            <div class="course-name">Chesapeake - U.S. History</div>
+            
+            <div class="assignment-count">10 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="overdue" href="https://classroom.google.com/c/ODA4NTc5MzE5MTUw/a/ODI1NDE1MDAxNjU2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">John Henry Myth</div>
+                    <div class="desc">10-sentence short story myth about John Henry at some other point in his life.</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">10 pts</span>
+                    <span class="due-chip due-overdue">Jan 27, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-late">Late</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODA4NTc5MzE5MTUw/a/ODI1OTQ3NDk2OTI5/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">History Fair Process Paper</div>
+                    <div class="desc">A process paper is required for projects in every category. The process paper must be 500 words or fewer, and must not i...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">10 pts</span>
+                    <span class="due-chip due-overdue">Mar 10, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODA4NTc5MzE5MTUw/a/ODI0NDMzMzE0Njk2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Class Participation 1st Semester</div>
+                    <div class="desc">Does the student...
+-Participate in class
+-Turn in assignments on time
+-Put in a clear effort</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">10 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (10)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODA4NTc5MzE5MTUw/a/ODE3MzgxMjIwNTgx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Path to Civil War homework, part 1</div>
+                    <div class="desc">Define and explain three aspects of the U.S. in the 1800's using your notes from class. 2-3 sentences each.
+1. Undergrou...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">10 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (10)</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#65a30d">
+            <div class="course-name">Toy and Game Fair 2026</div>
+            <span class="section">All School</span>
+            <div class="assignment-count">15 assignments</div>
+          </div>
+          <div class="card-body">
+            
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#4f46e5">
+            <div class="course-name">2025-26 -- FALL -- LEGO Robotics / Engineering / Science</div>
+            
+            <div class="assignment-count">13 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODE3Njg5NDMyNDY5/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Prime Lessons -- Unit 6 -- Using Repeating Loops and If-Then Decision Branches</div>
+                    <div class="desc">Attach evidence (such as a short video) showing that you can use repeating loops and if-then decision branches to contro...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (85)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODE3Njg4NTc5MzAz/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Robot Design -- Part 4</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will document and present your Robot Design devel...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (0)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODE3Njg5MDEzNzAx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Innovation Project -- Part 4</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will complete and present an Innovation Project t...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (90)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODA0ODI5NTA3Nzc1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Robot Mission Completion</div>
+                    <div class="desc">Attach to this assignment evidence (such as short videos) of ALL of the missions that your robot has successfully comple...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (0)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODA0ODI5NjM0Mzc4/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Prime Lessons -- Unit 5 -- Use of Sensors</div>
+                    <div class="desc">Attach evidence (such as a short video) showing that you can use sensors to control your robot's movements -- color sens...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODE2NTA2MTg2Nzg3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Robot Design -- Part 3</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will document and present your Robot Design devel...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (0)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODA0ODI4MjE1NTI0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Innovation Project -- Part 3</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will complete and present an Innovation Project t...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/NzgwOTU5ODA2MTc2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Prime Lessons -- Unit 3 -- Beginning Movement</div>
+                    <div class="desc">Attach evidence (such as a short video) showing that you can control your robot's movements precisely -- for both straig...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODExMzMyMzU1NTM3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Innovation Project -- Part 2</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will complete and present an Innovation Project t...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (85)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODExMzI4MDc1ODU3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Robot Design -- Part 2</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will document and present your Robot Design devel...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (85)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODAzMjcyMDc3MzY1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Robot Design -- Part 1</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will document and present your Robot Design devel...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (100)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODAzMjcxMzc1Mjgw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Innovation Project -- Part 1</div>
+                    <div class="desc">As part of the First LEGO League Challenge for the 2025-2026 year, you will complete and present an Innovation Project t...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-turned-in">Turned In</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAzMTcyNDAxNjc3/a/ODA3Mjk2MzEzNTg0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Prime Lessons Unit 2 -- Using the Hub</div>
+                    <div class="desc">Attach evidence, such as a short video, that you can use the Spike Prime Hub to 1) move files between your device and th...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (90)</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#0891b2">
+            <div class="course-name">HISTORY FAIR 2025-2026</div>
+            <span class="section">SIEGEL</span>
+            <div class="assignment-count">2 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/ODAyMTc0ODIxODg0/a/ODI0MjgyMzk2NzM2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">Research Tasks</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#059669">
+            <div class="course-name">OVID ELA</div>
+            
+            <div class="assignment-count">23 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAxMTY0NzAxMjE2/a/ODI0MjE1MDU4OTg0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">FINISH VELDT and MINI QUIZ</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">10 pts</span>
+                    <span class="due-chip due-overdue">Jan 9, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (8.5)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/ODAxMTY0NzAxMjE2/a/ODIwMzI4NzY3NjQx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">read chapter 1 of GIVER LIST SOCIETY RULES</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">1 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (1)</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="background:#d97706">
+            <div class="course-name">TURING</div>
+            
+            <div class="assignment-count">27 assignments</div>
+          </div>
+          <div class="card-body">
+            
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODI0MzI3ODU0NzQz/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #6</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-overdue">Jan 22, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (43)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODI0ODMyMzc0NzI3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #7</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-overdue">Feb 3, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (47)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODQzODg3NjYzMTY3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #8</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-overdue">Feb 19, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (48)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODI1OTE4NTM0MDQw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #9</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-overdue">Mar 3, 2026 at 5:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (43)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODQ4MTQwMTg3NTMw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #10</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-overdue">Mar 17, 2026 at 4:59 AM (Overdue)</span>
+                    <span class="status-badge state-graded">Graded (48)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODQ4Mzc0NjUyOTA2/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">POW #11</div>
+                    <div class="desc">POW consists of 15 problems, each worth 4 points; therefore, each POW is worth 60 points.  You MUST SHOW ALL WORK to rec...</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-ok">Apr 14, 2026 at 4:59 AM</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODI1NDM2Nzc2MzA5/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">CHAPTER 1:  OPERATIONS AND ALGEBRAIC THINKING</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (92.56)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3MzA2ODEyNTQ3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">WEEKLY PARTICIPATION / CLASSWORK BEGINNING MARCH 16TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">40 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="upcoming" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIzOTY2MTIxODA1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING MARCH 2ND</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-assigned">Assigned</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3MzA2OTUxNjQx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING FEBRUARY 16TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (60)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIzOTY2MDU0Nzg1/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING FEBRUARY 2ND</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (80)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3MzA2MzY4MzUw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING JANUARY 21ST</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (55)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3MzA2MzQ2NDEx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING JANUARY 5TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">100 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (100)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3MzA1MjU5MDQ4/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">WEEKLY PARTICIPATION / CLASSWORK BEGINNING DECEMBER 15th -17th</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">30 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (30)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODM3Mjg1NjIyODgx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">YOUNG ENTREPRENEURS' DAY: OVERALL PROJECT GRADE</div>
+                    <div class="desc">Grades includes google classroom assignments, display poster, and final rubric.</div>
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">200 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (198.75)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIxMzEyODk5NTAx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING DECEMBER 1ST.</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (80)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA0OTU3Mzgy/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING NOVEMBER 10TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (80)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA1MDIyOTMw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING OCTOBER 27TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (80)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA1MTI0NTgx/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING OCTOBER 13TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">60 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (60)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA1MDUxMjM0/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING SEPTEMBER 29TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">70 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (70)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA1MDc4Mzg3/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING SEPTEMBER 15TH</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">80 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (80)</span>
+                  </div>
+                </a>
+                <a class="assignment" data-filter="turned-in" href="https://classroom.google.com/c/Nzk1OTQzNDQ3NDMy/a/ODIwNTA1MDU3MjIw/details" target="_blank">
+                  <div class="assignment-left">
+                    <div class="title">BIWEEKLY PARTICIPATION / CLASSWORK BEGINNING SEPTEMBER 2ND</div>
+                    
+                  </div>
+                  <div class="assignment-right">
+                    <span class="points">70 pts</span>
+                    <span class="due-chip due-none">No due date</span>
+                    <span class="status-badge state-graded">Graded (70)</span>
+                  </div>
+                </a>
+          </div>
+        </div>
+</div>
+
+<footer>Click any assignment to open it in Google Classroom</footer>
+
+<script>
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+
+      document.querySelectorAll('.card').forEach(card => {
+        const assignments = card.querySelectorAll('.assignment');
+        let visible = 0;
+        assignments.forEach(a => {
+          const show = filter === 'all' || a.dataset.filter === filter;
+          a.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        card.classList.toggle('hidden', visible === 0);
+      });
+    });
+  });
+</script>
+
 </body>
 </html>
