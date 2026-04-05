@@ -2,7 +2,7 @@ name: Fetch Homework Assignments
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # Every day at 6 AM UTC (adjust to your timezone)
+    - cron: '0 * * * *'   # Every hour
   workflow_dispatch:        # Also allows manual trigger from GitHub UI
 
 permissions:
